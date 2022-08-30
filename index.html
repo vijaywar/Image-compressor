@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Image Compressor</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        .orginalimg , .compressedimg{
+            display: inline-flex; 
+            height: 40vh;
+            border: 2px solid rgba(0, 0, 0, 0.438);
+            border-radius: 15px;
+            padding: 10px; 
+            margin: 5px 5px; 
+            box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.363);
+            justify-content: center;
+            overflow: scroll;
+        }
+        .orginalimg img, .compressedimg img{
+            width: 100%; 
+            
+            margin: auto;
+        }
+        .textBaselink span{
+           line-height: 25px;
+           float: right;
+        }
+        ::-webkit-scrollbar{display: none;}
+    </style>
+  </head>
+  <body>
+    <div class="card m-2 p-2 " style="margin: auto;display:block">
+        <div  > 
+            
+            <div class="row justify-content-center">
+                <div class="orginalimg  col-10 col-md-5">
+                    <img src="./noimage.jpg" id="input-preview" alt="This is the preview of the image you are going to upload."/>
+                </div>
+                <div class="compressedimg col-10 col-md-5 " >
+                    <img src="./noimage.jpg" id="output-preview" alt="This is the compressed result of the image you will upload."/>  
+                </div>
+            </div>
+           
+        </div>
+        <div class="card mt-2" >
+            <input value="200"  id="changeCanvas" type="range" min="100" max="2000" >
+        </div>
+        <div class="card shadow p-1">
+            <div class="input-group ">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
+                </div>
+                <div class="custom-file">
+                  <input  id="image-input"  type="file" class="custom-file-input" accept=".jpg,.png,.jpeg" id="inputGroupFile01"
+                    aria-describedby="inputGroupFileAddon01">
+                  <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                </div>
+              </div> 
+            <div>Reduced File Size : <span class="text-success" id="reducedFileSize"></span></div>
+            <div>Orginal File Size : <span class="text-primary" id="orginalFileSize"></span></div>
+            <div class="row justify-content-around">
+                <a href=""  download="orginal.jpg" type="button" name="" id="orginalbtn" class="btn btn-sm btn-primary col-5">Download Orginal</a>
+                <a href="" download="compressed.png" type="button" name="" id="compressedbtn" class="btn btn-sm btn-primary col-5">Download Compressed</a>
+            </div>
+        </div>
+       <div class="card">
+            Created By :<br/> Vijaykanth Reddy<br/>
+            <a class="p-2 bg-secondary textBaselink" target="_blank" href="https://www.linkedin.com/in/vijaykanth-reddy/" >
+                <i class="fa fa-linkedin" aria-hidden="true"></i> <span class="text-white">Linkedin</span>
+            </a>
+       </div>
+      
+    </div>
+    <script>
+        let btnDownload = document.getElementById('orginalbtn');
+        let btnDownloadcom = document.getElementById('compressedbtn');
+        let img = document.getElementById("input-preview")
+        let imgcom = document.getElementById("output-preview")
+        function bytes(string) {
+        var escaped_string = encodeURI(string);
+        if (escaped_string.indexOf("%") != -1) {
+            var count = escaped_string.split("%").length - 1;
+            count = count == 0 ? 1 : count;
+            count = count + (escaped_string.length - (count * 3));
+        }
+        else {
+            count = escaped_string.length;
+        }
+        return count
+        }
+        async function changeCanvas(){
+            const MAX_WIDTH = document.getElementById('changeCanvas').value; //if we resize by width, this is the max width of compressed image
+            console.log(MAX_WIDTH)
+            var inputPreview = document.getElementById("input-preview"); 
+            console.log(inputPreview,"output src")
+            //get the dimensions of the input image
+            let  width = inputPreview.width; 
+            let height = inputPreview.height
+            console.log(width) 
+            let imgcom=document.getElementById('output-preview');
+            imgcom.src = downloadCmpLink(inputPreview, MAX_WIDTH / width, width, height);
+            var base_64 = imgcom.src.replace(/^data:image\/(png|jpg);base64,/, ""); 
+            document.getElementById('reducedFileSize').innerText= bytes(base_64)/1024  +"kb"; 
+        }
+        function getFileName(str) {
+            return str.substring(str.lastIndexOf('/') + 1)
+        }
+        function getImageDimensions(image){
+            return new Promise((resolve, reject) => {
+                image.onload = function(e){
+                    const width = this.width;
+                    const height = this.height;
+                    resolve({height, width});
+                }
+            });
+        }
+        function compressImage(image, scale, initalWidth, initalHeight){
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement("canvas");
+
+                canvas.width = scale * initalWidth;
+                canvas.height = scale * initalHeight;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                
+                ctx.canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, "image/jpeg");   
+            }); 
+        }
+        function downloadCmpLink(image, scale, initalWidth, initalHeight){
+            const canvas = document.createElement("canvas");
+
+            canvas.width = scale * initalWidth;
+            canvas.height = scale * initalHeight;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            
+            return ctx.canvas.toDataURL("image/jpeg");    
+        }
+        const imageInput = document.getElementById("image-input");
+        imageInput.addEventListener("change", async (ev) => {
+            const uploadedImage = imageInput.files[0];
+            if(!uploadedImage){ // if no file is uploaded, no need to do anything
+                return;
+            }
+
+            //preview the inputted image
+            var inputPreview = document.getElementById("input-preview"); 
+            inputPreview.src = URL.createObjectURL(uploadedImage);
+            
+            //get the dimensions of the input image
+            const {height, width} = await getImageDimensions(inputPreview); 
+
+            const MAX_WIDTH = 200; //if we resize by width, this is the max width of compressed image
+            const MAX_HEIGHT = 200; //if we resize by height, this is the max height of the compressed image
+
+            const widthRatioBlob = await compressImage(inputPreview, MAX_WIDTH / width, width, height); 
+            const heightRatioBlob = await compressImage(inputPreview, MAX_HEIGHT / height, width, height);
+        
+            //pick the smaller blob between both
+            const compressedBlob = widthRatioBlob.size > heightRatioBlob.size ? heightRatioBlob : widthRatioBlob; 
+            // preview the compressed blob
+            const outputPreview = document.getElementById("output-preview");
+            outputPreview.src = URL.createObjectURL(compressedBlob);
+            btnDownload.href=inputPreview.src;
+            btnDownloadcom.href= downloadCmpLink(inputPreview, MAX_WIDTH / width, width, height); 
+            /*in some cases, the initial uploaded image maybe smaller than our compressed result. 
+            if that is the case, reuse the uploaded image. */
+        
+            const optimalBlob = compressedBlob.size < uploadedImage.size ? compressedBlob : uploadedImage; 
+            console.log(`Inital Size: ${uploadedImage.size}. Compressed Size: ${optimalBlob.size}`);
+            document.getElementById('orginalFileSize').innerText= Math.floor(uploadedImage.size/1024)+1 + "kb";
+            document.getElementById('reducedFileSize').innerText= Math.floor(compressedBlob.size/1024)+1 + "kb";
+            URL.revokeObjectURL(inputPreview);
+            URL.revokeObjectURL(outputPreview);
+        });
+        document.getElementById("changeCanvas").onclick=async ()=>{
+            await  changeCanvas();
+        };
+    </script>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
