@@ -145,6 +145,7 @@
             return ctx.canvas.toDataURL("image/jpeg");    
         }
         const imageInput = document.getElementById("image-input");
+         
         imageInput.addEventListener("change", async (ev) => {
             const uploadedImage = imageInput.files[0];
             if(!uploadedImage){ // if no file is uploaded, no need to do anything
@@ -181,7 +182,7 @@
             URL.revokeObjectURL(inputPreview);
             URL.revokeObjectURL(outputPreview);
         });
-        document.getElementById("changeCanvas").onclick=async ()=>{
+        document.getElementById("changeCanvas").onchange=async ()=>{
             await  changeCanvas();
         };
     </script>
